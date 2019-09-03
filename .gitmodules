@@ -1,0 +1,3 @@
+[submodule "BitcoinUnlimited"]
+	path = BitcoinUnlimited
+	url = git@github.com:BitcoinUnlimited/BitcoinUnlimited.git

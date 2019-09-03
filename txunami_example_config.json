@@ -1,0 +1,127 @@
+{
+    "_"      : "txunami configuration file -- use jsonlint-py --allow=duplicate-keys (apt-get install python-demjson) to make your JSON perfect",
+
+    "_"      : "This section is a dictionary that defines global configuration values",
+    "config" :
+    {
+        "_"   : "Specify the network, for use in translating addresses, etc:  regtest, testnet, or chain_nol",
+        "net" : "chain_nol",
+
+        "_"   : "Specify the network prefix: regtest = dab5bffa, nolnet = fbcec4e9.  Note in byte order (swapped compared to bitcoin.conf)",
+        "netMagic" : "a0c0c7d9",
+
+        "_"           : "Specify the default P2P port used by this network",
+        "defaultPort" : 9333,
+
+        "_"   : "Transaction fee in satoshis",
+        "fee" : 2,
+
+        "_"        : "Pre-generate this many UTXOs to use in generating transactions",
+        "minUtxos" : 4000000,
+
+        "_"        : "The host:port address of a bitcoind server used for administrative work (like coin splitting)",
+        "bitcoind" : "127.0.0.1",
+
+        "_"           : "An external command that will generate blocks (or wait if other miners are active) until every tx currently in the mempool is committed",
+        "txCommitCmd" : "TBD: Your mempool cleanup command here",
+
+        "_"             : "An external command that will get some coins, returning the same json format as 1 entry in the coins section of this document",
+        "coinAccessCmd" : "TBD: Command that returns a UTXO and privkey with coins"
+    },
+
+    "_"       : "This section is a list containing test phases that define transaction generation rates and targets to which to send the transactions",
+    "schedule":
+    [
+        {
+            "_"     : "This name appears in logs",
+            "name"  : "level 1",
+
+            "_"     : "Start time in seconds since the epoch, or offset from the schedule beginning",
+            "start" : 0,
+
+            "_"     : "End time in seconds since the epoch",
+            "end"   : 300,
+
+            "_"       : "Where to push transactions",
+            "targets" : [
+                {
+                    "_"    : "host in address:port format.  Use numerical address, and port is optional",
+                    "host" : "127.0.0.1",
+                    "_"    : "Starting rate in transactions per second",
+                    "rate" : 100,
+                    "_"       : "[Optional] Final rate in transactions per second",
+                    "rateEnd" : 100
+                },
+                {
+                    "host" : "142.93.157.219",
+                    "rate" : 200,
+                    "rateEnd" : 200
+                },
+                {
+                    "host" : "68.183.203.208",
+                    "rate" : 300,
+                    "rateEnd" : 300
+                },
+                {
+                    "host" : "167.71.228.204",
+                    "rate" : 400,
+                    "rateEnd" : 400
+                },
+                {
+                    "host" : "178.128.19.111",
+                    "rate" : 500,
+                    "rateEnd" : 500
+                }
+            ]
+        },
+
+        {
+            "name"   : "level 2",
+            "start" : 180,
+            "end"   : 180,
+
+            "targets" : [
+                {
+                    "host" : "127.0.0.1",
+                    "rate" : 2
+                }
+            ]
+        },
+        {
+            "name"   : "level 3",
+            "start" : 181,
+            "end"   : 181,
+
+            "targets" : [
+                {
+                    "host" : "127.0.0.1",
+                    "rate" : 1
+                }
+            ]
+        }
+    ],
+
+    "_"    : "This section defines the initial coins that this app can use.  This is a list of dictionaries containing UTXO and private key information",
+    "coins":
+    [
+        {
+            "_"   : "These parameters come from ./bitcoin-cli listunspent.  Its ok to include the other 'listunspent' dictionary values (but they will not be used)",
+            "txid": "f695b427312da6d4b0f9eae69df53e819198c922e3f489a4ccb0e2f831fce8b3",
+            "vout": 0,
+            "address": "bchnol:qp3jppnese4qlydr3t8uhqvjyn9r9vg95uv8a62ydw",
+            "scriptPubKey": "76a91463208679866a0f91a38acfcb819224ca32b105a788ac",
+            "satoshi": 5000000000,
+
+            "_"       : "This parameter comes from ./bitcoin-cli dumprivkey <address>",
+            "privKey": "6KUCVud6aeGmg52W4YKWoTNfu9XRY3eEFosdFZUZJyrtJ75cUqpv"
+        },
+        {
+            "txid": "f6f27121a9963cf13f6f4fe4534ab9f4d8d1d142bf65d42c020868f07ca86a13",
+            "vout": 0,
+            "address": "bchnol:qp3jppnese4qlydr3t8uhqvjyn9r9vg95uv8a62ydw",
+            "scriptPubKey": "76a91463208679866a0f91a38acfcb819224ca32b105a788ac",
+            "satoshi": 5000000000,
+            "privKey": "6KUCVud6aeGmg52W4YKWoTNfu9XRY3eEFosdFZUZJyrtJ75cUqpv"
+        }
+    ]
+}

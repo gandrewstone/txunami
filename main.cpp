@@ -18,6 +18,8 @@
 
 using namespace std;
 
+static const auto MAINNET_MSG_START = ParseHex("e3e1f3e8");
+static const auto TESTNET_MSG_START = ParseHex("f4e5f3f4");
 static const auto REGTEST_MSG_START = ParseHex("dab5bffa");
 static const auto NOLNET_MSG_START = ParseHex("00000000"); // ParseHex("fbcec4e9");
 
@@ -40,7 +42,6 @@ public:
 
     CScript createP2PKH()
     {
-        // TODO inefficient to GetPubKey more than once, should I cache it in the object?
         CKeyID dest = pubKey().GetID();
         constraintScript.clear();
         constraintScript << OP_DUP << OP_HASH160 << ToByteVector(dest) << OP_EQUALVERIFY << OP_CHECKSIG;
@@ -120,20 +121,42 @@ public:
     {
         if (settings.exists("fee")) fee.set(settings["fee"]);
         if (settings.exists("splitPerTx")) splitPerTx = settings["splitPerTx"].get_int64();
-        if (settings.exists("defaultPort")) defaultPort  = settings["defaultPort"].get_int64();
         if (settings.exists("minUtxos"))  minUtxos = settings["minUtxos"].get_int64();
         if (settings.exists("maxThreads")) maxThreads = settings["maxThreads"].get_int64();
         if (settings.exists("bitcoind")) bitcoind = settings["bitcoind"].get_str();
-        if (settings.exists("netMagic")) msgStart=ParseHex(settings["netMagic"].get_str());
         if (settings.exists("net"))
         {
             std::string n = settings["net"].get_str();
-            if (n == "regtest") net = CBaseChainParams::REGTEST;
-            else if (n == "testnet") net = CBaseChainParams::TESTNET;
-            else if (n == "chain_nol") net = CBaseChainParams::UNL;
-            else if (n == "mainnet") net = CBaseChainParams::MAIN;
+            if (n == "regtest")
+            {
+                net = CBaseChainParams::REGTEST;
+                msgStart = REGTEST_MSG_START;
+                defaultPort = DEFAULT_REGTESTNET_PORT;
+            }
+            else if (n == "testnet")
+            {
+                net = CBaseChainParams::TESTNET;
+                msgStart = TESTNET_MSG_START;
+                defaultPort = DEFAULT_TESTNET_PORT;
+            }
+            else if (n == "chain_nol")
+            {
+                net = CBaseChainParams::UNL;
+                msgStart = NOLNET_MSG_START;
+                defaultPort = DEFAULT_NOLNET_PORT;
+            }
+            else if (n == "mainnet")
+            {
+                net = CBaseChainParams::MAIN;
+                msgStart = MAINNET_MSG_START;
+                defaultPort = DEFAULT_MAINNET_PORT;
+                printf("cowardly not letting you spam mainnet unless you can code.\n");
+                exit(1);
+            }
             else throw ConfigException("Unknown value specified in 'net' field.");
         }
+        if (settings.exists("netMagic")) msgStart=ParseHex(settings["netMagic"].get_str());
+        if (settings.exists("defaultPort")) defaultPort  = settings["defaultPort"].get_int64();
     }
 };
 
@@ -214,8 +237,8 @@ bool createTx(CMutableTransaction& tx, const std::vector<UTXO>::iterator& inStar
 
     tx.nVersion = CTransaction::CURRENT_VERSION;
     tx.nLockTime = 0;
-    
-    tx.vin.resize(numInputs);    
+
+    tx.vin.resize(numInputs);
 
     int count=0;
     for(auto in = inStart; in != inEnd; in++,count++)
@@ -341,7 +364,7 @@ public:
         }
         catch(boost::system::system_error &e)
         {
-            printf("Cannot connect to %s error %s, retrying...\n)", ip.c_str(), e.what());
+            printf("Cannot connect to %s error %s, retrying...\n", ip.c_str(), e.what());
             sleep(1);
         }
         }

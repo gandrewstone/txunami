@@ -22,7 +22,7 @@
         "_"        : "Pre-generate this many UTXOs to use in generating transactions",
         "minUtxos" : 4000000,
 
-        "_"        : "The host:port address of a bitcoind server used for administrative work (like coin splitting)",
+        "_"        : "The host:port P2P address of a bitcoind server used for administrative work (like coin splitting). If port is not specified, defaultPort is used",
         "bitcoind" : "127.0.0.1",
 
         "_"           : "An external command that will generate blocks (or wait if other miners are active) until every tx currently in the mempool is committed",

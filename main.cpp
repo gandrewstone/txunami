@@ -284,7 +284,19 @@ public:
     SimpleClient(std::string ip):endpoint(boost::asio::ip::address::from_string(hostFromHostname(ip))
                                           ,portFromHostname(ip, gc.defaultPort)), socket(ios)
     {
-	socket.connect(endpoint);
+        while(1)
+        {
+        try
+        {
+	    socket.connect(endpoint);
+            break;
+        }
+        catch(boost::system::system_error &e)
+        {
+            printf("Cannot connect to %s error %s, retrying...\n)", ip.c_str(), e.what());
+            sleep(1);
+        }
+        }
         //auto VERSION_MSG = ParseHex("dab5bffa76657273696f6e00000000005e0000002ca922277e1101000100000000000000d6d1675d00000000010000000000000000000000000000000000ffff7f0000013bed010000000000000000000000000000000000ffff000000000000ecaff3bf4f09fcf309747847656e3a302e31ffffffff");
         auto VER_CONTENTS = ParseHex("7e1101000100000000000000d6d1675d00000000010000000000000000000000000000000000ffff7f0000013bed010000000000000000000000000000000000ffff000000000000ecaff3bf4f09fcf309747847656e3a302e31ffffffff");
         SendMessage(VER_MSG, (char*) &VER_CONTENTS.at(0), VER_CONTENTS.size());
@@ -306,8 +318,13 @@ public:
             boost::asio::const_buffer(header,sizeof(header)),
             boost::asio::const_buffer(data, size)
         };
+        
         boost::system::error_code error;
-        socket.write_some(sendGroup, error);
+        auto bytesWritten = socket.write_some(sendGroup, error);
+        if (bytesWritten==0)
+        {
+            printf("write error: %d\n", error.value());
+        }
 
         // Periodically read some data and dump it because we don't care what the server sends back to us
         // If we don't do this though, the buffer will eventually fill up and block sends
@@ -316,7 +333,8 @@ public:
         {
             boost::system::error_code error;
             //size_t len =
-            socket.read_some(boost::asio::buffer(readbuf), error);
+            if (socket.available())
+                socket.read_some(boost::asio::buffer(readbuf), error);
             // printf("dropped %lu received bytes\n", (long unsigned int) len);
         }
     }

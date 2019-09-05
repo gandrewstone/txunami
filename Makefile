@@ -1,6 +1,5 @@
 
-#BU_DIR=/fast/bitcoin/buclean/release
-BU_DIR:=BitcoinUnlimited/src
+BU_DIR=../buclean/release/src
 
 INC_PATHS:=-I$(BU_DIR)/../../src/univalue/include -I$(BU_DIR)/../../src/cashlib -I$(BU_DIR)/../../src -I$(BU_DIR) -I$(BU_DIR)/config
 LIB_PATHS:=-L. -L$(BU_DIR)/.libs -L$(BU_DIR)/univalue/.libs

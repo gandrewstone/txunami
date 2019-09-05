@@ -24,7 +24,7 @@ If you have a separate Bitcoin Unlimited build directory, you can choose to not 
 Once libunivalue.a, libbitcoincash.so and the Bitcoin Unlimited headers are available, run "make" to build the txunami executable.
 
 Since out-of-tree builds can be confusing here's a concrete example:  If you checked out txunami as a sibling of your bitcoinUnlimited code which is checked out in the "bu" directory, and you have completed an out-of-source build in the bu/release directory, to build txunami use:
-```make BU_DIR=../buclean/release/src```
+```make BU_DIR=../bu/release/src```
 
 Libbitcoincash.so is also copied from the BitcoinUnlimited build tree into this directory.
 

@@ -4,6 +4,9 @@
     "_"      : "This section is a dictionary that defines global configuration values",
     "config" :
     {
+        "_"         : "Specify the number of splits to use in the 1 to many transactions that are used to create UTXOs",
+        "splitPerTx": 15,
+
         "_"   : "Specify the network, for use in translating addresses, etc:  regtest, testnet, or chain_nol",
         "net" : "chain_nol",
 

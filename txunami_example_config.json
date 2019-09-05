@@ -53,12 +53,15 @@
                     "_"    : "Starting rate in transactions per second",
                     "rate" : 100,
                     "_"       : "[Optional] Final rate in transactions per second",
-                    "rateEnd" : 100
+                    "rateEnd" : 100,
+                    "_" : "specify the fee either as a constant or a random value within a range (of satoshis)",
+                    "fee" : [1,1000]
                 },
                 {
                     "host" : "142.93.157.219",
                     "rate" : 200,
-                    "rateEnd" : 200
+                    "rateEnd" : 200,
+                    "fee" : 1000
                 },
                 {
                     "host" : "68.183.203.208",

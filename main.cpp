@@ -7,6 +7,7 @@
 #include <fstream>
 #include <streambuf>
 #include <stdexcept>
+#include <random>
 #include "key.h"
 #include "uint256.h"
 #include "base58.h"
@@ -56,10 +57,57 @@ public:
     explicit ConfigException(const string& what):runtime_error(what) {}
 };
 
+class FeeProducer
+{
+    CAmount minFee = -1;
+    CAmount maxFee = -1;
+    CAmount constantFee = -1;
+
+    std::default_random_engine rnd;
+    // returns a uniformly distributed random number in the inclusive range: [0, UINT_MAX]
+    std::uniform_int_distribution<long int> randRange;
+public:
+    FeeProducer(uint64_t fee=0): constantFee(fee) {}
+
+    FeeProducer(const UniValue& v):constantFee(parseUnivalue(v)), rnd(std::random_device()()), randRange((int)minFee, (int)maxFee)
+    {}
+
+    void set(const UniValue& v)
+    {
+        parseUnivalue(v);
+        randRange = std::uniform_int_distribution<long int>(minFee, maxFee);
+    }
+
+    CAmount parseUnivalue(const UniValue& v)
+    {
+        if (v.isNum())
+        {
+            constantFee = v.get_int64();
+            return constantFee;
+        }
+        else constantFee = -1;
+
+        if (v.isArray())
+        {
+            minFee = v[0].get_int64();
+            maxFee = v[1].get_int64();
+        }
+        return constantFee;
+    }
+
+
+    CAmount operator() ()
+    {
+        if (constantFee >= 0) return constantFee;
+        else return randRange(rnd);
+        return 0;
+    }
+};
+
 class GlobalConfig
 {
 public:
-    uint64_t fee = 100;
+    FeeProducer fee;
     unsigned int splitPerTx = 23;
     unsigned int defaultPort = 18444;
     unsigned int minUtxos = 4*1000*1000;
@@ -70,7 +118,7 @@ public:
 
     void Load(UniValue settings)
     {
-        if (settings.exists("fee")) fee = settings["fee"].get_int64();
+        if (settings.exists("fee")) fee.set(settings["fee"]);
         if (settings.exists("splitPerTx")) splitPerTx = settings["splitPerTx"].get_int64();
         if (settings.exists("defaultPort")) defaultPort  = settings["defaultPort"].get_int64();
         if (settings.exists("minUtxos"))  minUtxos = settings["minUtxos"].get_int64();
@@ -362,7 +410,7 @@ void sendP2PKH(SimpleClient& sc, vector<UTXO>::iterator utxoSt, vector<UTXO>::it
 
     for (auto uit=utxoSt; uit != utxoEnd; ++uit,++txo)
     {
-        bool worked = createTx(tx, uit, uit+1, txo, txo+1, gc.fee);
+        bool worked = createTx(tx, uit, uit+1, txo, txo+1, gc.fee());
         if (worked)
         {
             CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);
@@ -385,9 +433,13 @@ public:
     string host;
     uint64_t rateBegin = 0;
     uint64_t rateEnd = std::numeric_limits<unsigned long long int>::max();
+    FeeProducer fee;
 
     void Load(const UniValue& u)
     {
+        if (u.exists("fee")) fee.set(u["fee"]);
+        else fee = gc.fee;
+
         if (u.exists("host")) host = u["host"].get_str();
         else ConfigException("Mandatory field 'host' is missing");
         if (u.exists("rate")) rateBegin = u["rate"].get_int64();
@@ -447,7 +499,7 @@ public:
     If all the utxos and txos are consumed, the routine uses prior generated transactions new utxos, creating chains
     of unspent transactions.
 */
-void GenerateTxs(string name, uint64_t start, uint64_t end, string host, uint64_t rateBegin, uint64_t rateEnd, std::vector<UTXO>::iterator utxoIt, std::vector<UTXO>::iterator txoIt, uint64_t utxoQty)
+void GenerateTxs(string name, FeeProducer& fee, uint64_t start, uint64_t end, string host, uint64_t rateBegin, uint64_t rateEnd, std::vector<UTXO>::iterator utxoIt, std::vector<UTXO>::iterator txoIt, uint64_t utxoQty)
 {
     // The leaky bucket is based on integers so makes rounding errors if the rate is near 1.  By multiplying by 1024,
     // we essentially use fixed point arithmetric, giving us 10 binary decimal points of precision.
@@ -491,7 +543,7 @@ void GenerateTxs(string name, uint64_t start, uint64_t end, string host, uint64_
                 passCount = 0;
             }
 
-            bool worked = createTx(tx, uit, uit+1, oit, oit+1, gc.fee);
+            bool worked = createTx(tx, uit, uit+1, oit, oit+1, fee());
             if (worked)
             {
                 CDataStream serializer(SER_NETWORK, PROTOCOL_VERSION);
@@ -563,16 +615,16 @@ public:
         auto txoIt = txo.begin();
         for(auto& p: phases)
         {
-            for (auto& t: p.targets)
+            for (vector<ScheduleOp>::iterator t = p.targets.begin(); t != p.targets.end(); ++t)
             {
                 thrds.push_back(thread( [=] {
-                            GenerateTxs(p.name, p.startTime, p.endTime, t.host, t.rateBegin, t.rateEnd, utxoIt, txoIt, txoPerEntity);
+                            GenerateTxs(p.name, t->fee, p.startTime, p.endTime, t->host, t->rateBegin, t->rateEnd, utxoIt, txoIt, txoPerEntity);
                         }));
                 utxoIt += txoPerEntity;
                 txoIt += txoPerEntity;
             }
         }
-        
+
         for (auto &t : thrds)
         {
             t.join();
@@ -661,7 +713,7 @@ int main(int argc, char** argv)
         {
             auto txoStart = txoIdx;
             txoIdx += curSplit;
-            bool worked = createTx(tx, u, u+1, txoStart, txoIdx, gc.fee);
+            bool worked = createTx(tx, u, u+1, txoStart, txoIdx, gc.fee());
             if (worked)
             {
                 // printf("%s\n", EncodeHexTx(tx).c_str());

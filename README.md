@@ -5,6 +5,7 @@ Txunami is capable of delivering over 50000 transactions per second to a locally
 
 Txunami allows the user to specify a multi-step transaction injection scenario, specifying the transaction rate to multiple hosts, and allowing either simultaneous or sequential operation.
 
+Txunami stores all wallet state in RAM and just quits when done -- **all of the coins used in a run will be lost**.  It is expected that this tool is run on test blockchains with ample worthless coins.  However, future versions could store final UTXO state to disk or consolidate UTXOs into a single final output to conserve coins an clean up the UTXO.
 
 ## Building
 

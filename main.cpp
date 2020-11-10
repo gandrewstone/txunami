@@ -13,6 +13,7 @@
 #include "base58.h"
 #include "script/script.h"
 #include "streams.h"
+#include "random.h"
 #include "utilstrencodings.h"
 #include "leakybucket.h"
 
@@ -22,6 +23,7 @@ static const auto MAINNET_MSG_START = ParseHex("e3e1f3e8");
 static const auto TESTNET_MSG_START = ParseHex("f4e5f3f4");
 static const auto REGTEST_MSG_START = ParseHex("dab5bffa");
 static const auto NOLNET_MSG_START = ParseHex("00000000"); // ParseHex("fbcec4e9");
+static const auto SCALENET_MSG_START = ParseHex("c3afe1a2");
 
 class UTXO
 {
@@ -152,6 +154,12 @@ public:
                 defaultPort = DEFAULT_MAINNET_PORT;
                 printf("cowardly not letting you spam mainnet unless you can code.\n");
                 exit(1);
+            }
+            else if ((n == "scalenet") || (n ==  CBaseChainParams::SCALENET))
+            {
+                net = CBaseChainParams::SCALENET;
+                msgStart = SCALENET_MSG_START;
+                defaultPort = DEFAULT_SCALENET_PORT;
             }
             else throw ConfigException("Unknown value specified in 'net' field.");
         }
@@ -674,6 +682,7 @@ int main(int argc, char** argv)
     SelectParams(gc.net);
     SHA256AutoDetect();
     ECC_Start();
+    RandomInit();
 
     std::vector<UTXO> utxo;
     ParseInputCoins(config["coins"], utxo);

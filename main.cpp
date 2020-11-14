@@ -355,13 +355,19 @@ class SimpleClient
 {
     unsigned int readCtr=0;
 public:
+    std::string ip;
     boost::asio::io_service ios;
     boost::asio::ip::tcp::endpoint endpoint;
     boost::asio::ip::tcp::socket socket;
     std::array<char, 2*1024*1024> readbuf;
 
-    SimpleClient(std::string ip):endpoint(boost::asio::ip::address::from_string(hostFromHostname(ip))
-                                          ,portFromHostname(ip, gc.defaultPort)), socket(ios)
+    SimpleClient(std::string _ip):ip(_ip), endpoint(boost::asio::ip::address::from_string(hostFromHostname(ip))
+                                           ,portFromHostname(ip, gc.defaultPort)), socket(ios)
+    {
+        connect();
+    }
+
+    void connect()
     {
         while(1)
         {
@@ -382,6 +388,7 @@ public:
         // Ack his version message even though we don't look for it
         SendMessage(VERACK_MSG, nullptr, 0);
     }
+    
     void SendMessage(const char* msgname, const char* data, uint32_t size)
     {
         unsigned char header[4+12+4+4];
@@ -403,6 +410,11 @@ public:
         if (bytesWritten==0)
         {
             printf("write error: %d\n", error.value());
+            if (error == boost::system::errc::broken_pipe)
+            {
+                socket.close();
+                connect();
+            }
         }
 
         // Periodically read some data and dump it because we don't care what the server sends back to us

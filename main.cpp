@@ -779,7 +779,7 @@ int main(int argc, char** argv)
     
     printf("done in %f4.2 sec\n", ((float)(end-start))/1000000000.0);
     printf("create tx loop in %6.2f sec\n", ((float)(end-createTxLoopStart))/1000000000.0);
-    printf("Generate a block <enter>\n");
+    printf("Generate a block and press <enter>\n");
     string input;
     getline(cin, input);
 

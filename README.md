@@ -71,5 +71,5 @@ It then spawns a thread for every schedule entity.  The thread sleeps until the 
 
 It uses a leaky bucket algorithm to precisely control the rate of transaction generation.  When the end time specified in the schedule entity is reached, the connection is disconnected and the thread quits.  When all threads quit, the run is complete and Txunami ends.
 
-At this point, there is no way to recover any funds left in UTXOs.  If needed, it would not be too hard to either write all these UTXOs to disk, or implement a UTXO sweep phase that combines all this dust back into a few UTXOs sent to addresses in the configuration file.
+After all phases end correctly, the remaining UTXOs will be written to the file `utxos.json`. If the remaining balance is significant, it is easy to copy-paste the contents of this file back to the `coins` section of `txunami.json` to continue spending; otherwise the private keys can be swept. 
 

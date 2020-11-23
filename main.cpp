@@ -53,6 +53,7 @@ public:
 
 /** Generate transactions at the maximum rate possible to the specified host */
 void MaxSpeed(const string& host, vector<UTXO>& utxo, vector<UTXO>& txo);
+bool saveUtxos(std::vector<UTXO> utxos);
 
 class ConfigException:public runtime_error
 {
@@ -702,13 +703,13 @@ int main(int argc, char** argv)
     printf("preparation: split coins\n");
 
     vector<UTXO> txo;
-    unsigned int stepSize = 0;
+    unsigned int stepSize = utxo.size();
     unsigned int step = 1;
     SimpleClient sc(gc.bitcoind);
 
     uint64_t start = GetStopwatch();
     uint64_t createTxLoopStart = 0;
-    while (stepSize < gc.minUtxos)
+    while (stepSize <= gc.minUtxos)
     {
         // Split by the maximum allowed per tx, or by the minimum needed to get beyond our gc.minUtxos choice
         unsigned int curSplit = 1;
@@ -779,6 +780,9 @@ int main(int argc, char** argv)
     
     printf("done in %f4.2 sec\n", ((float)(end-start))/1000000000.0);
     printf("create tx loop in %6.2f sec\n", ((float)(end-createTxLoopStart))/1000000000.0);
+    printf("Generate a block and push <Enter>... ");
+    string input;
+    getline(cin, input);
 
     txo = utxo;  // Copy the vector to send to myself
 
@@ -794,13 +798,34 @@ int main(int argc, char** argv)
     if (runAschedule)
         sched.Execute(utxo, txo);
     else
-    {
-        printf("Generate a block <enter>\n");
-        string input;
-        cin >> input;
         MaxSpeed(gc.bitcoind, utxo, txo);
+
+    if (!saveUtxos(txo))
+        printf("Could not save the remaining utxos");
+}
+
+bool saveUtxos(std::vector<UTXO> utxos)
+{
+    ofstream utxofile;
+    UniValue results(UniValue::VARR);
+    for (UTXO &utxo : utxos)
+    {
+        UniValue entry(UniValue::VOBJ);
+        entry.pushKV("txid", utxo.prevout.hash.GetHex());
+        entry.pushKV("vout", (uint64_t) utxo.prevout.n);
+        entry.pushKV("satoshi", utxo.satoshi);
+        CScript script = utxo.constraintScript;
+        entry.pushKV("scriptPubKey", HexStr(script.begin(), script.end()));
+        entry.pushKV("privKey", CBitcoinSecret(utxo.privKey).ToString());
+        results.push_back(entry);
     }
 
+    utxofile.open("utxos.json");
+    if(!utxofile) return false;
+    utxofile << results.write(1, 4);
+    utxofile.close();
+    
+    return true;
 }
 
 void MaxSpeed(const string& host, vector<UTXO>& utxo, vector<UTXO>& txo)

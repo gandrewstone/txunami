@@ -18,6 +18,7 @@ Txunami uses Bitcoin Unlimited's libbitcoincash.so and libunivalue.a shared libr
 It is then necessary to build BitcoinUnlimited with the "--enable-shared" flag set in configure.  Please read https://github.com/BitcoinUnlimited/BitcoinUnlimited/blob/release/doc/build-unix.md for more details. For most purposes, the build process will look like this: 
 
 ```
+git submodule update --init --recursive
 cd BitcoinUnlimited
 git checkout dev  # Optional - checkout the latest enchancements; if that doesn't work, swap "dev" for "release"
 sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev

@@ -779,6 +779,9 @@ int main(int argc, char** argv)
     
     printf("done in %f4.2 sec\n", ((float)(end-start))/1000000000.0);
     printf("create tx loop in %6.2f sec\n", ((float)(end-createTxLoopStart))/1000000000.0);
+    printf("Generate a block and press <enter>\n");
+    string input;
+    getline(cin, input);
 
     txo = utxo;  // Copy the vector to send to myself
 
@@ -794,12 +797,7 @@ int main(int argc, char** argv)
     if (runAschedule)
         sched.Execute(utxo, txo);
     else
-    {
-        printf("Generate a block <enter>\n");
-        string input;
-        cin >> input;
         MaxSpeed(gc.bitcoind, utxo, txo);
-    }
 
 }
 

@@ -15,8 +15,18 @@ Txunami stores all wallet state in RAM and just quits when done -- **all of the 
 Txunami uses Bitcoin Unlimited's libbitcoincash.so and libunivalue.a shared libraries.  Therefore it is necessary to first build Bitcoin Unlimited.  Bitcoin Unlimited has been added as a submodule so to check it out use:
 ```git submodule update --init --recursive```
 
-It is then necessary to build BitcoinUnlimited with the "--enable-shared" flag set in configure.  Please read https://github.com/BitcoinUnlimited/BitcoinUnlimited/blob/release/doc/build-unix.md for more details.
+It is then necessary to build BitcoinUnlimited with the "--enable-shared" flag set in configure.  Please read https://github.com/BitcoinUnlimited/BitcoinUnlimited/blob/release/doc/build-unix.md for more details. For most purposes, the build process will look like this: 
 
+```
+cd BitcoinUnlimited
+git checkout dev  # Optional - checkout the latest enchancements; if that doesn't work, swap "dev" for "release"
+sudo apt-get install build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev
+./autogen.sh
+./configure --disable-wallet --with-gui=no --enable-shared
+make
+```
+
+To speed up make, you can run parallel compilation with the `-j N` flag, where N is the number of threads you want (put in your number of cores-1 for a safe default)
 
 If you have a separate Bitcoin Unlimited build directory, you can choose to not use the submodule.  Instead edit txunami/Makefile and change the BU_DIR variable to point to your Bitcoin Unlimited build source directory, or override BU_DIR on the make command line.  For example, If you are doing an "in-source-tree" build, this directory is "BitcoinUnlimited/src", but if you ran an "out-of-source-tree" build, say into the "BitcoinUnlimited/release" subdirectory, this directory is "BitcoinUnlimited/release/src".  
 

@@ -1,7 +1,7 @@
 
 BU_DIR=./BitcoinUnlimited/src
 
-INC_PATHS:=-I$(BU_DIR)/../../src/univalue/include -I$(BU_DIR)/../../src/cashlib -I$(BU_DIR)/../../src -I$(BU_DIR) -I$(BU_DIR)/config
+INC_PATHS:=-I$(BU_DIR)/../src/univalue/include -I$(BU_DIR)/../src/cashlib -I$(BU_DIR)/../src -I$(BU_DIR) -I$(BU_DIR)/config
 LIB_PATHS:=-L. -L$(BU_DIR)/.libs -L$(BU_DIR)/univalue/.libs
 
 STD_LIBS:=-lboost_system -lpthread

@@ -16,6 +16,7 @@
 #include "random.h"
 #include "utilstrencodings.h"
 #include "leakybucket.h"
+#include "cashaddrenc.h"
 
 using namespace std;
 
@@ -816,6 +817,9 @@ bool saveUtxos(std::vector<UTXO> utxos)
         entry.pushKV("satoshi", utxo.satoshi);
         CScript script = utxo.constraintScript;
         entry.pushKV("scriptPubKey", HexStr(script.begin(), script.end()));
+        CTxDestination address;
+        ExtractDestination(script, address);
+        entry.pushKV("address", EncodeCashAddr(address, Params()));        
         entry.pushKV("privKey", CBitcoinSecret(utxo.privKey).ToString());
         results.push_back(entry);
     }
